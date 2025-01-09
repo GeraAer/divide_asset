@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Segmentation Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        h1 {
+            font-size: 2rem;
+            color: #333;
+        }
+        #dropZone {
+            margin: 20px auto;
+            padding: 20px;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+            width: 50%;
+            cursor: pointer;
+        }
+        #dropZone.hover {
+            border-color: #666;
+            background-color: #e6e6e6;
+        }
+        #dropZone p {
+            margin: 0;
+            font-size: 1rem;
+            color: #666;
+        }
+        img {
+            max-width: 80%;
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        #resultMessage {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: #007BFF;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: white;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Image Segmentation Tool</h1>
+    <h3>Select a mode below:</h3>
+
+    <div>
+        <button id="segmentButton">Instance Segmentation</button>
+        <button id="transparentButton">Generate Transparent Background</button>
+    </div>
+
+    <h3>Drag and drop an image here or click to select:</h3>
+    <div id="dropZone">
+        <p>Drop your image here or click to select</p>
+    </div>
+
+    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+    <div id="resultMessage"></div>
+    <div id="resultImage"></div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const resultMessage = document.getElementById('resultMessage');
+        const resultImage = document.getElementById('resultImage');
+        const segmentButton = document.getElementById('segmentButton');
+        const transparentButton = document.getElementById('transparentButton');
+
+        let currentMode = 'segment'; // Default mode
+
+        // Switch to instance segmentation mode
+        segmentButton.addEventListener('click', () => {
+            currentMode = 'segment';
+            resultMessage.textContent = 'Mode: Instance Segmentation';
+        });
+
+        // Switch to transparent background generation mode
+        transparentButton.addEventListener('click', () => {
+            currentMode = 'transparent';
+            resultMessage.textContent = 'Mode: Generate Transparent Background';
+        });
+
+        // Click on drop zone triggers file input
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Drag over event
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('hover');
+        });
+
+        // Drag leave event
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('hover');
+        });
+
+        // Drop event
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('hover');
+            const files = e.dataTransfer.files;
+            if (files.length) {
+                handleFileUpload(files[0]);
+            }
+        });
+
+        // File input change event
+        fileInput.addEventListener('change', (e) => {
+            const files = e.target.files;
+            if (files.length) {
+                handleFileUpload(files[0]);
+            }
+        });
+
+        // Handle file upload based on the selected mode
+        async function handleFileUpload(file) {
+            resultMessage.textContent = 'Uploading image, please wait...';
+            resultImage.innerHTML = '';
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                let response;
+                if (currentMode === 'segment') {
+                    response = await fetch('/process_image', {
+                        method: 'POST',
+                        body: formData,
+                    });
+                } else if (currentMode === 'transparent') {
+                    response = await fetch('/process_image_with_masks', {
+                        method: 'POST',
+                        body: formData,
+                    });
+                }
+
+                const result = await response.json();
+                if (result.success) {
+                    displayResults(result);
+                } else {
+                    resultMessage.textContent = `Error: ${result.message}`;
+                }
+            } catch (error) {
+                resultMessage.textContent = 'An error occurred while processing the image.';
+                console.error(error);
+            }
+        }
+
+        // Display results based on the response
+        function displayResults(result) {
+            resultImage.innerHTML = '';
+            if (currentMode === 'segment') {
+                resultMessage.textContent = 'Segmentation successful! Result below:';
+                const img = document.createElement('img');
+                img.src = result.file;
+                img.alt = 'Segmentation Result';
+                resultImage.appendChild(img);
+            } else if (currentMode === 'transparent') {
+                resultMessage.textContent = 'Transparent background generation successful! Results below:';
+                const fullImg = document.createElement('img');
+                fullImg.src = result.transparent_full;
+                fullImg.alt = 'Transparent Full Image';
+                resultImage.appendChild(fullImg);
+
+                result.instances.forEach((instance) => {
+                    const img = document.createElement('img');
+                    img.src = instance;
+                    img.alt = 'Instance Image';
+                    resultImage.appendChild(img);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
