@@ -1,0 +1,72 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin-top: 50px;
+    background-color: #f4f4f9;
+    color: #333;
+}
+
+h1 {
+    font-size: 2rem;
+    color: #007BFF;
+    margin-bottom: 20px;
+}
+
+#dropZone {
+    margin: 20px auto;
+    padding: 20px;
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    width: 50%;
+    cursor: pointer;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+#dropZone.hover {
+    border-color: #666;
+    background-color: #e6e6e6;
+}
+
+#dropZone p {
+    margin: 0;
+    font-size: 1rem;
+    color: #666;
+}
+
+img {
+    max-width: 80%;
+    margin-top: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+#resultMessage {
+    margin-top: 20px;
+    font-size: 1.2rem;
+    color: #007BFF;
+}
+
+#resultImage, #resultTransparent {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+#resultImage img, #resultTransparent img {
+    width: 200px;
+    height: auto;
+    object-fit: contain;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    padding: 5px;
+    background-color: #fff;
+    transition: transform 0.2s;
+}
+
+#resultImage img:hover, #resultTransparent img:hover {
+    transform: scale(1.1);
+    border-color: #007BFF;
+}
